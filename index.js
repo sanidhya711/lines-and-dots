@@ -5,8 +5,9 @@ import * as THREE from 'https://cdn.skypack.dev/three@0.130.1';
 noise.seed(Math.random());
 
 var gui = new dat.GUI();
+gui.close();
 var debugParams = {noOfPoints: 75};
-gui.add(debugParams,"noOfPoints",1,100,1).onFinishChange(addPoints);
+gui.add(debugParams,"noOfPoints",1,200,1).onFinishChange(addPoints);
 
 var scene,camera,renderer,composer;
 var getCursorHelper;
@@ -42,6 +43,10 @@ var pointShaderMaterial = new THREE.ShaderMaterial({
     fragmentShader: document.getElementById("pointFragmentShader").innerText,
 });
 
+function map(number, inMin, inMax, outMin, outMax) {
+    return (number - inMin) * (outMax - outMin) / (inMax - inMin) + outMin;
+}
+
 function addPoints(value){
     //remove stuff if it was already in da scene
     if(points){
@@ -60,8 +65,10 @@ function addPoints(value){
     verticies = new Float32Array(value * 3);
 
     for(let index = 0; index < verticies.length; index += 3){
-        verticies[index] = noise.simplex2(0.1,index) * 4;
-        verticies[index+1] = noise.simplex2(index,0.1) * 4;
+        verticies[index] = map(Math.random(),0,1,-4,4);
+        // map(noise.simplex2(0.5,index), -1 , 1 , -5 , 5 );
+        verticies[index+1] = map(Math.random(),0,1,-2.5,2.5);
+        // map(noise.simplex2(index,0.5), -1 , 1 , -3 , 3 );
     }
 
     pointGeometry.setAttribute('position',new THREE.BufferAttribute(verticies,3));
@@ -114,8 +121,8 @@ var cursorShaderMaterial = new THREE.ShaderMaterial({
     fragmentShader: document.getElementById("cursorFragmentShader").innerText,
     uniforms: {
         uTime: { value: 0 },
-        uColor1: { value: new THREE.Color(1,0,0)},
-        uColor2: { value: new THREE.Color(0,0,1)}
+        uColor1: { value: new THREE.Color(0xffffff * Math.random())},
+        uColor2: { value: new THREE.Color(0xffffff * Math.random())}
     }
 });
 
@@ -218,7 +225,7 @@ function render(){
     }
 
     for (let index = 0; index < points.geometry.attributes.position.array.length; index+=3) {
-        var offset1 = noise.simplex3(points.geometry.attributes.position.array[index],points.geometry.attributes.position.array[index+1],elapsedTime * 0.1) / 125;
+        var offset1 = noise.simplex3(points.geometry.attributes.position.array[index],points.geometry.attributes.position.array[index+1],elapsedTime * 0.05) / 150;
         points.geometry.attributes.position.array[index] += offset1;
         points.geometry.attributes.position.array[index+1] += offset1;
     }
