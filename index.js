@@ -1,12 +1,12 @@
 import * as THREE from 'https://cdn.skypack.dev/three@0.130.1';
 
-// (function(){var script=document.createElement('script');script.onload=function(){var stats=new Stats();document.body.appendChild(stats.dom);requestAnimationFrame(function loop(){stats.update();requestAnimationFrame(loop)});};script.src='//mrdoob.github.io/stats.js/build/stats.min.js';document.head.appendChild(script);})()
+(function(){var script=document.createElement('script');script.onload=function(){var stats=new Stats();document.body.appendChild(stats.dom);requestAnimationFrame(function loop(){stats.update();requestAnimationFrame(loop)});};script.src='//mrdoob.github.io/stats.js/build/stats.min.js';document.head.appendChild(script);})()
 
 noise.seed(Math.random());
 
-// var gui = new dat.GUI();
+var gui = new dat.GUI();
 var debugParams = {noOfPoints: 75};
-// gui.add(debugParams,"noOfPoints",1,100,1).onFinishChange(addPoints);
+gui.add(debugParams,"noOfPoints",1,100,1).onFinishChange(addPoints);
 
 var scene,camera,renderer,composer;
 var getCursorHelper;
@@ -15,7 +15,7 @@ function init(){
     scene = new THREE.Scene();
     camera = new THREE.PerspectiveCamera(45,window.innerWidth/window.innerHeight,0.1,1000);
     camera.position.z = 5;
-    renderer = new THREE.WebGLRenderer({precision:"lowp",antialias:true});
+    renderer = new THREE.WebGLRenderer({precision:"lowp",antialias:true,truepowerPreference: "high-performance"});
     renderer.setSize(window.innerWidth,window.innerHeight);
     document.body.appendChild(renderer.domElement);
 
@@ -59,10 +59,9 @@ function addPoints(value){
     var pointGeometry = new THREE.BufferGeometry();
     verticies = new Float32Array(value * 3);
 
-    for(let index = 0; index < verticies.length; index += 3) {
-        verticies[index] = (Math.random() - 0.5) * 7;   
-        verticies[index+1] = (Math.random() - 0.5) * 4; 
-        0
+    for(let index = 0; index < verticies.length; index += 3){
+        verticies[index] = noise.simplex2(0.1,index) * 4;
+        verticies[index+1] = noise.simplex2(index,0.1) * 4;
     }
 
     pointGeometry.setAttribute('position',new THREE.BufferAttribute(verticies,3));
@@ -88,7 +87,7 @@ function drawLines(){
         for (let j = index + 3; j < verticies.length; j = j + 3){
             var toCheck = new THREE.Vector3(verticies[j],verticies[j+1],verticies[j+2]);
             var distance = main.distanceTo(toCheck);
-            if(distance < 0.8 && distance > 0.2){
+            if(distance < 0.9 && distance > 0.2){
                 const lineGeometry = new THREE.BufferGeometry().setFromPoints([main,toCheck]);
                 var color = saveLineColors['a'+index+'b'+j] ?? Math.random() * 0xffffff;
                 var line = new THREE.Line(lineGeometry,new THREE.MeshBasicMaterial({color}));
@@ -114,7 +113,9 @@ var cursorShaderMaterial = new THREE.ShaderMaterial({
     vertexShader: document.getElementById("cursorVertexShader").innerText,
     fragmentShader: document.getElementById("cursorFragmentShader").innerText,
     uniforms: {
-        uColor: { value: new THREE.Color("pink") }
+        uTime: { value: 0 },
+        uColor1: { value: new THREE.Color(1,0,0)},
+        uColor2: { value: new THREE.Color(0,0,1)}
     }
 });
 
@@ -156,7 +157,7 @@ function drawLinesToUserPoint(){
         for(let index = 0; index < verticies.length; index += 3){
             var toCheck = new THREE.Vector3(verticies[index],verticies[index+1],verticies[index+2]);
             var distance = intersects.point.distanceTo(toCheck);
-            if(distance < 0.8 && distance > 0.2){
+            if(distance < 0.9 && distance > 0.2){
                 const lineGeometry = new THREE.BufferGeometry().setFromPoints([intersects.point,toCheck]);
                 var color = saveUserLineColors['a'+-1+'b'+index] ?? Math.random() * 0xffffff;
                 var line = new THREE.Line(lineGeometry,new THREE.MeshBasicMaterial({color}));
@@ -193,16 +194,35 @@ function windowResized(){
     camera.updateProjectionMatrix();
 }
 
+var hitCeil = false;
+var uTime = 0;
 
 var clock = new THREE.Clock();
 function render(){   
     var elapsedTime = clock.getElapsedTime();
 
-    for (let index = 0; index < points.geometry.attributes.position.array.length; index+=3) {
-        var offsetWithnNoise = noise.simplex3(points.geometry.attributes.position.array[index],points.geometry.attributes.position.array[index+1],elapsedTime * 0.1) / 100;
-        points.geometry.attributes.position.array[index] += offsetWithnNoise;
-        points.geometry.attributes.position.array[index+1] += offsetWithnNoise;
+    if(!hitCeil){
+        uTime += 0.0077;
+    }else{
+        uTime -= 0.0077;
     }
+
+    cursorShaderMaterial.uniforms.uTime.value = uTime;
+
+    if(uTime > 1){
+        hitCeil = true;
+        cursorShaderMaterial.uniforms.uColor1.value = new THREE.Color(0xffffff * Math.random());
+    }else if(uTime < 0){
+        hitCeil = false;
+        cursorShaderMaterial.uniforms.uColor2.value = new THREE.Color(0xffffff * Math.random());
+    }
+
+    for (let index = 0; index < points.geometry.attributes.position.array.length; index+=3) {
+        var offset1 = noise.simplex3(points.geometry.attributes.position.array[index],points.geometry.attributes.position.array[index+1],elapsedTime * 0.1) / 125;
+        points.geometry.attributes.position.array[index] += offset1;
+        points.geometry.attributes.position.array[index+1] += offset1;
+    }
+    
     points.geometry.attributes.position.needsUpdate = true;
 
     drawLines();
@@ -219,4 +239,3 @@ render();
 document.addEventListener("mousemove",onMouseMove);
 window.addEventListener("resize",windowResized);
 document.onmouseout = mouseOut;;
-
