@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Zen+Loop:ital@0;1&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="index.css">
+</head>
+<body>
+    <script src="perlin.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dat-gui/0.7.7/dat.gui.min.js" integrity="sha512-LF8ZB1iTwi4Qvkm4pekHG4a437Y9Af5ZuwbnW4GTbAWQeR2E4KW8WF+xH8b9psevV7wIlDMx1MH9YfPqgKhA/Q==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    
+    <h1 style="left: 100px;top: 50px;z-index: 1;font-family: 'Zen Loop', cursive; font-size: 75px;letter-spacing: 10px;font-style: italic;width: max-content;color: #abb39f;">Hi,I'm <span style="text-decoration: underline;text-decoration-thickness: 3.7px;margin-left: 10px;"> Sanidhya</span></h1>
+    <h2 style="left: 100px;top: 170px;z-index: 1;font-family: 'Zen Loop', cursive;font-size: x-large;color: #8a7d7d;">•<span style="letter-spacing: 12px;width: max-content;margin-left: 19px;">A Web Developer</span></h2>
+
+    <!-- POINT SHADER MATERIAL -->
+        <script id="pointVertexShader" type="x-shader/x-vertex">
+            void main(){
+                gl_Position = projectionMatrix * viewMatrix * modelMatrix * vec4(position,1.0);
+                gl_PointSize = 4.0;
+            }
+        </script>
+
+        <script id="pointFragmentShader" type="x-shader/x-vertex">
+            void main(){
+                float strength = distance(gl_PointCoord,vec2(0.5)); 
+                strength = step(0.5,strength);
+                strength = 1.0 - strength;
+                
+                gl_FragColor = vec4(vec3(strength),1.0);
+            }
+        </script>
+    <!-- POINT SHADER MATERIAL ENDS -->
+
+    <!-- USER CURSOR SHADER MATERIAL -->
+        <script id="cursorVertexShader" type="x-shader/x-vertex">
+            void main(){
+                gl_Position = projectionMatrix * viewMatrix * modelMatrix * vec4(position,1.0);
+                gl_PointSize = 7.0;
+            }
+        </script>
+
+        <script id="cursorFragmentShader" type="x-shader/x-vertex">
+            uniform vec3 uColor;
+            void main(){
+                float strength = distance(gl_PointCoord,vec2(0.5)); 
+                strength = step(0.5,strength);
+                strength = 1.0 - strength;
+                vec3 color = vec3(strength);
+                if(strength == 1.0){
+                    color = uColor;
+                }
+                
+                gl_FragColor = vec4(color,1.0);
+            }
+        </script>
+    <!-- USER CURSOR SHADER MATERIAL ENDS -->
+
+    <script defer type="module" src="index.js"></script>
+</body>
+</html>
