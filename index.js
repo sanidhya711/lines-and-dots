@@ -16,7 +16,7 @@ function init(){
     scene = new THREE.Scene();
     camera = new THREE.PerspectiveCamera(45,window.innerWidth/window.innerHeight,0.1,1000);
     camera.position.z = 5;
-    renderer = new THREE.WebGLRenderer({precision:"lowp",antialias:true,truepowerPreference: "high-performance"});
+    renderer = new THREE.WebGLRenderer({precision:"lowp",antialias:true,powerPreference: "high-performance"});
     renderer.setSize(window.innerWidth,window.innerHeight);
     document.body.appendChild(renderer.domElement);
 
@@ -209,9 +209,9 @@ function render(){
     var elapsedTime = clock.getElapsedTime();
 
     if(!hitCeil){
-        uTime += 0.0077;
+        uTime += 0.0082;
     }else{
-        uTime -= 0.0077;
+        uTime -= 0.0082;
     }
 
     cursorShaderMaterial.uniforms.uTime.value = uTime;
